@@ -31,7 +31,7 @@ requires = ["setuptools<82", "wheel", "Cython>=3.1,<3.2"]
 build-backend = "setuptools.build_meta"
 TOML
 cd "$work"
-p4a apk --private "$work/app" --no-byte-compile-python --bootstrap=sdl2 --arch=arm64-v8a \
+p4a apk --dist_name=tuxemon --private "$work/app" --no-byte-compile-python --bootstrap=sdl2 --arch=arm64-v8a \
     --sdk-dir="$ANDROID_HOME" --ndk-dir="$ANDROID_NDK_HOME" \
     --android-api=35 --ndk-api=24 --minsdk=24 --orientation=landscape \
     --package=org.tuxemon.tuxemon --name=Tuxemon --version=0.4.35 \
