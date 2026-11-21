@@ -1,4 +1,5 @@
 from pathlib import Path
+from shutil import copy2, copytree, ignore_patterns
 
 from pythonforandroid.recipes.pygame import Pygame2Recipe
 
@@ -28,6 +29,19 @@ class PygameCERecipe(Pygame2Recipe):
             if line not in content.splitlines():
                 content += "\n" + line
         setup.write_text(content + "\n")
+
+    def install_python_package(self, arch, **kwargs):
+        # build_ext produced target ELF modules. A second pip build would
+        # switch to pygame-ce's desktop Meson backend.
+        source = Path(self.get_build_dir(arch.arch))
+        destination = Path(self.ctx.get_site_packages_dir(arch)) / "pygame"
+        copytree(source / "src_py", destination, dirs_exist_ok=True,
+                 ignore=ignore_patterns("__briefcase", "__pyinstaller", "meson.build"))
+        compiled, = (source / "build").glob("lib.*/pygame")
+        for extension in compiled.rglob("*.so"):
+            relative = extension.relative_to(compiled)
+            filename = relative.name.split(".")[0] + ".so"
+            copy2(extension, destination / relative.parent / filename)
 
 
 recipe = PygameCERecipe()
