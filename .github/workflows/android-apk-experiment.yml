@@ -39,3 +39,38 @@ jobs:
         with:
           name: Tuxemon-arm64
           path: dist/android/Tuxemon-arm64.apk
+
+  launch:
+    needs: apk
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: Tuxemon-arm64
+      - name: Enable emulator acceleration
+        run: sudo chmod a+rw /dev/kvm
+      - uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          disable-animations: true
+          script: |
+            adb shell getprop ro.product.cpu.abilist | tee device-abis.txt
+            adb install Tuxemon-arm64.apk
+            adb logcat -c
+            adb shell am start -W -n org.tuxemon.tuxemon/org.kivy.android.PythonActivity
+            sleep 65
+            adb exec-out screencap -p > launch.png
+            adb logcat -d > launch.log
+            adb shell pidof org.tuxemon.tuxemon
+            ! grep -E 'FATAL EXCEPTION|Traceback \(most recent call last\)' launch.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Android-launch-test
+          path: |
+            launch.png
+            launch.log
+            device-abis.txt
