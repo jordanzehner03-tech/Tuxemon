@@ -11,7 +11,14 @@ class PygameCERecipe(Pygame2Recipe):
 
     def prebuild_arch(self, arch):
         super().prebuild_arch(arch)
-        setup = Path(self.get_build_dir(arch.arch)) / "Setup"
+        build_dir = Path(self.get_build_dir(arch.arch))
+        # Its x86 AVX2 compiler hook looks at the build host's CPU.
+        # ARM64 uses the standard setuptools compiler invocation.
+        script = build_dir / "setup.py"
+        script.write_text(script.read_text().replace(
+            "distutils.ccompiler.CCompiler.spawn = spawn", ""
+        ))
+        setup = build_dir / "Setup"
         content = setup.read_text()
         for line in (
             "system src_c/system.c $(SDL) $(DEBUG)",
